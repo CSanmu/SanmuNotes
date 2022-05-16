@@ -94,6 +94,130 @@ public class InterfaceDemo implements InterfaceOne, InterfaceTwo {
 
 # Lambda
 
+
+
+## 函数式接口
+
+### 定义
+
+函数式接口是指一个接口内只有一个抽象方法，若干个 default 方法的接口，一般函数式接口都会使用 **@FunctionalInterface** 注解进行标注，但是并不是说没有该注解就不是一个函数式接口了，该注解只是用于编译期检查，如果有多个抽象方法，那么编译将不同过。
+
+先来看下怎么定义一个函数式接口：
+
+```java
+@FunctionalInterface
+interface FunctionInterfaceOne {
+
+    void methodOne(String msg);
+
+}
+
+public class FunctionInterfaceDemo {
+
+
+    public static void main(String[] args) {
+        // 匿名类
+        FunctionInterfaceOne firstInstance = new FunctionInterfaceOne() {
+            @Override
+            public void methodOne(String msg) {
+                System.out.println("this is " + msg);
+            }
+        };
+        // lambda 表达式
+        FunctionInterfaceOne secondInstance = msg -> System.out.println("this is " + msg);
+        firstInstance.methodOne("firstInstance");
+        secondInstance.methodOne("secondInstance");
+    }
+}
+```
+
+如上代码，**FunctionInterfaceOne** 就是一个函数式接口，在 main 方法中使用两种方式定义了一个 FunctionInterfaceOne 对象，一个是以前常用的匿名类形式，一个就是 java8 的 lambda 表达式。该函数式接口表达的是接受一个参数，并且不输出返回值。
+
+目前我们常用的函数式接口主要有:
+
++ **BiConsumer<T,U>：**代表了一个接受两个输入参数的操作，并且不返回任何结果
++ **BiFunction<T,U,R>：**代表了一个接受两个输入参数的方法，并且返回一个结果
++ **BinaryOperator<T>：**代表了一个作用于于两个同类型操作符的操作，并且返回了操作符同类型的结果
++ **BiPredicate<T,U>**：代表了一个两个参数的boolean值方法
++ **BooleanSupplier：**代表了boolean值结果的提供方
++ **Consumer<T>：**代表了接受一个输入参数并且无返回的操作
++ **Function<T,R>：**接受一个输入参数，返回一个结果。
++ **Predicate<T>：**接受一个输入参数，返回一个布尔值结果。
++ **Supplier<T>：**无参数，返回一个结果。
++ java.lang.Runnable
++ java.util.concurrent.Callable
++ java.util.Comparator
+
+除了几个 java8 前就有的复合函数式接口定义的接口，函数式接口大都定义在 java.utils.function 包下
+
+## Lambda 实战
+
+1. Lambda 表达式，也可称为闭包，它是推动 Java 8 发布的最重要新特性。
+
+2. Lambda 允许把函数作为一个方法的参数（函数作为参数传递进方法中）,用代码来展示会更加清晰明了
+
+~~~java
+@FunctionalInterface
+interface FunctionInterfaceOne {
+
+    void methodOne(String msg);
+
+}
+
+public class FunctionInterfaceDemo {
+
+    public void methodOne(FunctionInterfaceOne functionInterfaceOne) {
+        functionInterfaceOne.methodOne("FunctionInterfaceDemo#methodOne");
+    }
+
+    public static void main(String[] args) {
+        FunctionInterfaceDemo demo = new FunctionInterfaceDemo();
+        demo.methodOne(msg -> System.out.println(msg));
+    }
+}
+~~~
+
+如上代码，又一个函数式接口 FunctionInterfaceOne，类 FunctionInterfaceDemo#methodOne 接收一个 FunctionInterfaceOne 类型的实例，在 main 方法中，直接通过 lambda 表达式（msg -> System.out.println(msg)）构建出来一个实例传入该方法中。按照以前的写法就是设计一个匿名内部类，传入该方法，或者为该接口定义一个实现类，然后生成一个实例，将实例作为参数传入 FunctionInterfaceDemo#methodOne 方法中。
+
+3. 使用 Lambda 表达式可以使代码变的更加简洁紧凑。
+
+### 语法
+
+> (parameters) -> expression 
+>
+> 或 
+>
+> (parameters) ->{ statements; }
+
++ **可选类型声明：**不需要声明参数类型，编译器可以统一识别参数值。
+
+> ```java
+> () -> 5  // 不需要参数,返回值为 5 
+> ```
+
++ **可选的参数圆括号：**一个参数无需定义圆括号，但多个参数需要定义圆括号。
+
+> msg -> System.out.println(msg)
+>
+> (a,b) -> a+b
+
++ **可选的大括号：**如果主体包含了一个语句，就不需要使用大括号。
+
+> ```java
+> (a, b) -> {
+>     System.out.println(a + b);
+>     return a + b
+> }
+> ```
+
++ **可选的返回关键字：**如果主体只有一个表达式返回值则编译器会自动返回值，大括号需要指定表达式返回了一个数值。
+
+> (a,b) -> a+b
+>
+> 或
+>
+> (a,b) -> return a+b
+
 # Stream
 
 # Optional
