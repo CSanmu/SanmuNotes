@@ -135,15 +135,15 @@ public class FunctionInterfaceDemo {
 
 目前我们常用的函数式接口主要有:
 
-+ **BiConsumer<T,U>：**代表了一个接受两个输入参数的操作，并且不返回任何结果
-+ **BiFunction<T,U,R>：**代表了一个接受两个输入参数的方法，并且返回一个结果
-+ **BinaryOperator<T>：**代表了一个作用于于两个同类型操作符的操作，并且返回了操作符同类型的结果
++ **BiConsumer<T,U>**：代表了一个接受两个输入参数的操作，并且不返回任何结果
++ **BiFunction<T,U,R>**：代表了一个接受两个输入参数的方法，并且返回一个结果
++ **BinaryOperator<T>**：代表了一个作用于于两个同类型操作符的操作，并且返回了操作符同类型的结果
 + **BiPredicate<T,U>**：代表了一个两个参数的boolean值方法
-+ **BooleanSupplier：**代表了boolean值结果的提供方
-+ **Consumer<T>：**代表了接受一个输入参数并且无返回的操作
-+ **Function<T,R>：**接受一个输入参数，返回一个结果。
-+ **Predicate<T>：**接受一个输入参数，返回一个布尔值结果。
-+ **Supplier<T>：**无参数，返回一个结果。
++ **BooleanSupplier**：代表了boolean值结果的提供方
++ **Consumer<T>**：代表了接受一个输入参数并且无返回的操作
++ **Function<T,R>**：接受一个输入参数，返回一个结果。
++ **Predicate<T>**：接受一个输入参数，返回一个布尔值结果。
++ **Supplier<T>**：无参数，返回一个结果。
 + java.lang.Runnable
 + java.util.concurrent.Callable
 + java.util.Comparator
@@ -219,6 +219,141 @@ public class FunctionInterfaceDemo {
 > (a,b) -> return a+b
 
 # Stream
+
+stream 是 java8 卓越的新特性之一，这种风格是将要处理的数据看成一种**管道流**，在管道中进行一系列的**中间操作**，然后使用**最终操作**得到最终想要的数据以及数据结构。由于中间操作以及最终操作的很多方法的入参都是函数式接口，因此，stream 往往配合 lambda 表达式进行使用。
+
+```javaj a
++--------------------+       +------+   +------+   +---+   +-------+
+| stream of elements +-----> |filter+-> |sorted+-> |map+-> |collect|
++--------------------+       +------+   +------+   +---+   +-------+
+```
+
+## 生成流
+
+流的数据来源可以是数组、集合等
+
++ stream() -> 生成串行流
++ ParallelStream -> 生成并行流
+
+```java
+public class StreamDemo {
+    public static void main(String[] args) {
+        List<Integer> list = Arrays.asList(1, 3, 1, 2, 3, 4, 1, 2, 3, 41, 1, 23, 1, 23213, 43);
+        list.stream().sorted().collect(Collectors.toList());
+        list.parallelStream().sorted().collect(Collectors.toList());
+    }
+}
+```
+
+
+
+## 中间操作
+
+这里简单记录下几个常见的中间操作
+
+```
+Stream<T> filter(Predicate<? super T> predicate)
+<R> Stream<R> map(Function<? super T, ? extends R> mapper);
+Stream<T> distinct();
+Stream<T> sorted();
+Stream<T> sorted(Comparator<? super T> comparator);
+Stream<T> peek(Consumer<? super T> action);
+Stream<T> limit(long maxSize);
+Stream<T> skip(long n);
+```
+
+
+
+```java
+public class StreamDemo {
+
+    /**
+     * 塞选出大于 10 的元素并且打印出来
+     * filter 入参是一个 Predicate 函数式接口，接收一个参数并且返回一个布尔值，这里可以使用 lambda 表达式配合使用
+     */
+    public static void filterDemo(Stream<Integer> stream) {
+        System.out.println(stream.filter(item -> item > 10).collect(Collectors.toList()));
+    }
+
+    /**
+     * 将流内元素都乘 2 并且打印出来
+     * map 入参是一个 Function 函数式接口，接收一个参数并且返回另一个参数
+     */
+    public static void mapDemo(Stream<Integer> stream) {
+        System.out.println(stream.map(item -> item * 2).collect(Collectors.toList()));
+    }
+
+    /**
+     * 将流元素去重（使用元素的 equal 方法判断元素是否相等）并且打印出来
+     */
+    public static void distinctDemo(Stream<Integer> stream) {
+        System.out.println(stream.distinct().collect(Collectors.toList()));
+    }
+
+    /**
+     * 将元素排序，如果 sorted 方法没有传参数，那么是按照自然顺序生序排，否则按照 Comparator 接口接口定义的规则排
+     * 一个 Stream 对象不能重复利用，否则会报错
+     */
+    public static void sortedDemo(Stream<Integer> stream) {
+//        System.out.println(stream.sorted().collect(Collectors.toList()));
+        System.out.println(stream.sorted((one, two) -> two - one).collect(Collectors.toList()));
+    }
+
+    /**
+     * peek 方法的入参是一个 Consumer 函数式接口，该接口接收一个参数但是不返回参数，因此，peek 方法只能根据元素做一些操作，但是无法返回，与遍历有点像
+     * 此方法的存在主要是为了支持调试，在调试中，我们希望在元素流过管道中的某个点时看到它们：
+     */
+    public static void peekDemo(Stream<Integer> stream) {
+//        stream.peek(System.out::println).collect(Collectors.toList());
+    }
+
+    /**
+     * limit 方法用于取出前 n 个元素，然后基于这 n 个元素生成一个新的流用于后续的操作，和 sql 中的 limit 关键字用法一样
+     */
+    public static void limitDemo(Stream<Integer> stream) {
+        System.out.println(stream.limit(2).collect(Collectors.toList()));
+    }
+
+    /**
+     * skip 方法用于跳过前 n 个元素，将剩下的元素生成一个新的流用于后续操作，和 sql 中的 offset 关键字用法一样
+     */
+    public static void skipDemo(Stream<Integer> stream) {
+        System.out.println(stream.skip(2).collect(Collectors.toList()));
+    }
+
+
+    public static void main(String[] args) {
+        List<Integer> list = Arrays.asList(1, 3, 1, 2, 3, 4, 1, 2, 3, 41, 1, 23, 1, 23213, 43);
+        filterDemo(list.stream());
+        mapDemo(list.stream());
+        distinctDemo(list.stream());
+        sortedDemo(list.stream());
+        peekDemo(list.stream());
+        limitDemo(list.stream());
+        skipDemo(list.stream());
+    }
+}
+```
+
+
+
+这里需要注意的一个点是流内所有的中间操作都必须遇到终端操作才会执行，否则就是一个定义，不会真正跑，如下代码
+
+```java
+public static void main(String[] args) {
+    List<Integer> list = Arrays.asList(1, 3, 1, 2, 3, 4, 1, 2, 3, 41, 1, 23, 1, 23213, 43);
+
+    Stream<Integer> integerStream = list.stream().map(item -> {
+        int i = item * 2;
+        System.out.println(i);// 1
+        return i;
+    });
+    System.out.println("this is a temp");// 2
+    integerStream.collect(Collectors.toList());// 3
+}
+```
+
+按照代码的自上而下执行的顺序原则，1 处的打印应该先执行，2 处的打印应该后执行，但是事实是 2 处的打印反而先执行，如果我们将 3 处的代码注释掉，那么 1 处的代码就不会执行了，因此，所有流的中间操作都必须遇到终端操作才会真正执行。
 
 # Optional
 
