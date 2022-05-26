@@ -355,6 +355,138 @@ public static void main(String[] args) {
 
 按照代码的自上而下执行的顺序原则，1 处的打印应该先执行，2 处的打印应该后执行，但是事实是 2 处的打印反而先执行，如果我们将 3 处的代码注释掉，那么 1 处的代码就不会执行了，因此，所有流的中间操作都必须遇到终端操作才会真正执行。
 
+## 终端操作
+
+流的终端操作是得到之前经过一系列中间操作后的结果
+
+常见的终端操作有
+
+```java
+<R, A> R collect(Collector<? super T, A, R> collector);
+void forEach(Consumer<? super T> action);
+Object[] toArray();
+<A> A[] toArray(IntFunction<A[]> generator);
+long count();
+boolean anyMatch(Predicate<? super T> predicate);
+boolean allMatch(Predicate<? super T> predicate);
+boolean noneMatch(Predicate<? super T> predicate);
+Optional<T> findFirst();
+Optional<T> findAny();
+Optional<T> max(Comparator<? super T> comparator);
+Optional<T> min(Comparator<? super T> comparator);
+T reduce(T identity, BinaryOperator<T> accumulator);
+Optional<T> reduce(BinaryOperator<T> accumulator);
+```
+
+
+
+```java
+public class StreamDemo {
+
+    /**
+     * 将流以集合的形式输出
+     */
+    public static void collectDemo(Stream<Integer> stream) {
+        System.out.println(stream.collect(Collectors.toList()));
+//        System.out.println(stream.collect(Collectors.toSet()));
+    }
+
+    /**
+     * 对此流的每个元素执行操作，也就是遍历
+     */
+    public static void forEachDemo(Stream<Integer> stream) {
+        stream.forEach(item -> System.out.println(item));
+    }
+
+    /**
+     * 将流转化成数组元素
+     */
+    public static void toArrayDemo(Stream<Integer> stream) {
+//        Object[] objects = stream.toArray();
+        Integer[] integers = stream.toArray(Integer[]::new);
+    }
+
+    /**
+     * 获取流中的元素个数
+     */
+    public static void countDemo(Stream<Integer> stream){
+        System.out.println(stream.count());
+    }
+
+    /**
+     * 流中元素是否有任意一个满足条件
+     */
+    public static void anyMatchDemo(Stream<Integer> stream) {
+        System.out.println(stream.anyMatch(item -> Objects.equals(item, 1)));
+    }
+
+    /**
+     * 流中元素是否都满足条件
+     */
+    public static void allMatchDemo(Stream<Integer> stream) {
+        System.out.println(stream.allMatch(item -> Objects.equals(item, 1)));
+    }
+
+    /**
+     * 流中元素是否没有一个满足条件
+     */
+    public static void noneMatchDemo(Stream<Integer> stream) {
+        System.out.println(stream.noneMatch(item -> Objects.equals(item, 1)));
+    }
+
+    /**
+     * 获取流中的第一个元素
+     */
+    public static void findFirstDemo(Stream<Integer> stream) {
+        Optional<Integer> first = stream.findFirst();
+        first.ifPresent(System.out::println);
+    }
+
+    /**
+     * 获取流中的任意一个元素
+     */
+    public static void findAnyDemo(Stream<Integer> stream) {
+        Optional<Integer> element = stream.findAny();
+        element.ifPresent(System.out::println);
+    }
+
+    /**
+     * 获取流中最大元素（根据自己定义的 Comparator 接口来）
+     */
+    public static void maxDemo(Stream<Integer> stream) {
+        Optional<Integer> max = stream.max((a, b) -> a - b);
+        max.ifPresent(System.out::println);
+    }
+
+    /**
+     * 获取流中最小元素（根据自己定义的 Comparator 接口来）
+     */
+    public static void minDemo(Stream<Integer> stream) {
+        Optional<Integer> max = stream.min((a, b) -> a - b);
+        max.ifPresent(System.out::println);
+    }
+
+    /**
+     * 聚合操作
+     */
+    public static void reduceDemo(List<Integer> list) {
+        // 对 list 元素求和，然后加上 0
+        System.out.println(list.stream().reduce(0, Integer::sum));
+        // 对 list 元素求和，然后加上 10000
+        System.out.println(list.stream().reduce(10000, Integer::sum));
+        System.out.println(list.stream().reduce(0, (a, b) -> a - b));
+        System.out.println(list.stream().reduce(0, (a, b) -> a / b));
+        System.out.println(list.stream().reduce(0, (a, b) -> a * b));
+
+        // 最大和最小
+        System.out.println(list.stream().reduce(0, Integer::min));
+        System.out.println(list.stream().reduce(0, Integer::max));
+    }
+}
+```
+
 # Optional
+
+
 
 # Date-Time
