@@ -487,6 +487,233 @@ public class StreamDemo {
 
 # Optional
 
+optional 是 java 8 新的判空特性，
 
+## 老的判空方法
+
+```java
+public class OptionalDemo {
+
+    static class A {
+        B b;
+    }
+
+    static class B {
+        Integer c;
+    }
+
+    private static A getA() {
+        return new A();
+    }
+
+    public static void main(String[] args) {
+        A a = getA();
+        if(a != null){
+            B b = a.b;
+            if(b != null){
+                System.out.println(a.b.c);
+            }
+        }
+    }
+
+}
+```
+
+## optional 判空方法
+
+```java
+public class OptionalDemo {
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    static class A {
+        B b;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    static class B {
+        Integer c;
+    }
+
+    private static A getA() {
+        return new A(new B(1));
+    }
+
+    public static void main(String[] args) {
+        A a = getA();
+        Optional.ofNullable(a).map(A::getB).map(B::getC).ifPresent(System.out::println);
+    }
+
+}
+```
+
+## optional 特性
+
+### optional
+
+```java
+// 空对象对应的 Optional 实例
+private static final Optional<?> EMPTY = new Optional<>();
+// Optional 实例的操作对象，可能为 null，也可能有值
+private final T value;
+
+// 构造函数，value 不能为空，为空抛出 npe 异常
+private Optional(T value) {
+  this.value = Objects.requireNonNull(value);
+}
+
+// 如果 value 为空，则返回 empty 对象，否则构造一个 Optional 实例
+public static <T> Optional<T> ofNullable(T value) {
+    return value == null ? empty() : of(value);
+}
+
+// 返回一个 EMPTY 对象
+public static<T> Optional<T> empty() {
+  @SuppressWarnings("unchecked")
+  Optional<T> t = (Optional<T>) EMPTY;
+  return t;
+}
+
+// 构造一个 Optional 实例，如果 value 为空，则抛出 npe 异常
+public static <T> Optional<T> of(T value) {
+  return new Optional<>(value);
+}
+```
+
+常用的构造 Optional 对象通常使用 ofNullable 方法，如果想要让异常透传出来，才使用 of 方法
+
+### map
+
+```java
+// 通过入参 mapper 构造一个新的 Optional 对象
+// 如果入参 mapper 为null，抛出 npe 异常，如果对应的 Optional 实例的 value 为 null，返回 EMPTY 对象，否则生成新的 Optional // 对象用于后续操作
+public<U> Optional<U> map(Function<? super T, ? extends U> mapper) {
+  Objects.requireNonNull(mapper);
+  if (!isPresent())
+    return empty();
+  else {
+    return Optional.ofNullable(mapper.apply(value));
+  }
+}
+```
+
+### isPresent
+
+```java
+// 如果操作的 Optional 对象的 value 值不为空，返回 true，否则返回 false
+public boolean isPresent() {
+    return value != null;
+}
+// 如果操作的 Optional 对象的 value 值不为空，则执行对应的逻辑
+public void ifPresent(Consumer<? super T> consumer) {
+  if (value != null)
+    consumer.accept(value);
+}
+// 用法
+Optional.ofNullable(a).map(A::getB).map(B::getC).ifPresent(System.out::println);
+```
+
+### 获取值
+
+```java
+// 如果 Optional 对象的 value 不为 null，返回 value，否则返回 other
+public T orElse(T other) {
+    return value != null ? value : other;
+}
+Integer integer = Optional.ofNullable(a).map(A::getB).map(B::getC).orElse(0);
+
+// 如果 Optional 对象的 value 不为 null，返回 value，否则执行 other 的逻辑
+public T orElseGet(Supplier<? extends T> other) {
+  return value != null ? value : other.get();
+}
+Integer value = Optional.ofNullable(a).map(A::getB).map(B::getC).orElseGet(() -> {
+  System.out.println("value is null");
+  return 0;
+});
+
+// 如果value != null 返回value，否则抛出参数返回的异常
+public <X extends Throwable> T orElseThrow(Supplier<? extends X> exceptionSupplier) throws X {
+  if (value != null) {
+    return value;
+  } else {
+    throw exceptionSupplier.get();
+  }
+}
+try {
+  Integer value = Optional.ofNullable(a).map(A::getB).map(B::getC).orElseThrow(() -> {
+    System.out.println("value is null");
+    return new Exception("value is null");
+  });
+} catch (Exception e) {
+  e.printStackTrace();
+}
+
+/**
+* value为null抛出NoSuchElementException，不为空返回value。
+*/
+public T get() {
+  if (value == null) {
+      throw new NoSuchElementException("No value present");
+  }
+  return value;
+}
+Integer integer = Optional.ofNullable(a).map(A::getB).map(B::getC).get();
+```
+
+### 过滤值
+
+```java
+/**
+* 1. 如果是empty返回empty
+* 2. predicate.test(value)==true 返回this，否则返回empty
+*/
+public Optional<T> filter(Predicate<? super T> predicate) {
+  Objects.requireNonNull(predicate);
+  if (!isPresent())
+    return this;
+  else
+    return predicate.test(value) ? this : empty();
+}
+```
+
+## 常见用法
+
+```java
+Optional.ofNullable(a).map(A::getB).map(B::getC).filter(v->v==1).orElse(0);
+```
 
 # Date-Time
+
+Java 8 新的时间特性
+
+```java
+LocalDateTime.class //日期+时间 format: yyyy-MM-ddTHH:mm:ss.SSS
+LocalDate.class //日期 format: yyyy-MM-dd
+LocalTime.class //时间 format: HH:mm:ss
+```
+
+## 格式化
+
+```java
+//format yyyy-MM-dd HH:mm:ss
+LocalDateTime dateTime = LocalDateTime.now();
+DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+String dateTimeStr = dateTime.format(dateTimeFormatter);
+System.out.println(String.format("dateTime format : %s", dateTimeStr));
+```
+
+## 字符串转日期
+
+```java
+LocalDate date = LocalDate.of(2021, 1, 26);
+LocalDate.parse("2021-01-26");
+
+LocalDateTime dateTime = LocalDateTime.of(2021, 1, 26, 12, 12, 22);
+LocalDateTime.parse("2021-01-26 12:12:22");
+
+LocalTime time = LocalTime.of(12, 12, 22);
+LocalTime.parse("12:12:22");
+```
