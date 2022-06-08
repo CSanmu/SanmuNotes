@@ -717,3 +717,11 @@ LocalDateTime.parse("2021-01-26 12:12:22");
 LocalTime time = LocalTime.of(12, 12, 22);
 LocalTime.parse("12:12:22");
 ```
+
+
+
+# 参考
+
+https://github.com/CSanmu/JavaGuide/blob/main/docs/java/new-features/java8-common-new-features.md
+
+https://www.runoob.com/java/java8-streams.html
